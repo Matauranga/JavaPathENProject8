@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import rewardCentral.RewardCentral;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
@@ -68,7 +69,7 @@ public class RewardsService {
             for (Attraction attraction : copyOnWriteAttractions) {
                 if (user.getUserRewards().stream().noneMatch(userReward -> userReward.attraction.attractionName.equals(attraction.attractionName))) {
                     if (nearAttraction(visitedLocation, attraction)) {
-                        user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user)));
+                        user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user.getUserId())));
                     }
                 }
             }
@@ -84,8 +85,8 @@ public class RewardsService {
         return !(getDistance(attraction, visitedLocation.location) > proximityBuffer);
     }
 
-    private int getRewardPoints(Attraction attraction, User user) {
-        return rewardsCentral.getAttractionRewardPoints(attraction.attractionId, user.getUserId());
+    public int getRewardPoints(Attraction attraction, UUID userId) {
+        return rewardsCentral.getAttractionRewardPoints(attraction.attractionId, userId);
     }
 
     public double getDistance(Location loc1, Location loc2) {
