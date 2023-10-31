@@ -11,7 +11,10 @@ import rewardCentral.RewardCentral;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Service
 public class RewardsService {
@@ -23,6 +26,7 @@ public class RewardsService {
     private int attractionProximityRange = 200;
     private final GpsUtil gpsUtil;
     private final RewardCentral rewardsCentral;
+    private final ExecutorService executor = Executors.newFixedThreadPool(2); //TODO Frank
 
     public RewardsService(GpsUtil gpsUtil, RewardCentral rewardCentral) {
         this.gpsUtil = gpsUtil;
@@ -48,7 +52,7 @@ public class RewardsService {
 //			for(Attraction attraction : attractions) {
 //				if(user.getUserRewards().stream().filter(r -> r.attraction.attractionName.equals(attraction.attractionName)).count() == 0) {
 //					if(nearAttraction(visitedLocation, attraction)) {
-//						user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user)));
+//						user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user.getUserId())));
 //					}
 //				}
 //			}
@@ -58,25 +62,58 @@ public class RewardsService {
     /**
      * Mine
      */
-    public void calculateRewards(User user) {//TODO : Franck --> test nearAllAttractions
+    public void calculateRewards(User user) {
 
-        List<VisitedLocation> userLocations = user.getVisitedLocations();
+        List<VisitedLocation> userLocations = new CopyOnWriteArrayList<>(user.getVisitedLocations());
         List<Attraction> attractions = gpsUtil.getAttractions();
-        CopyOnWriteArrayList<VisitedLocation> copyOnWriteUserLocations = new CopyOnWriteArrayList<>(userLocations);
-        CopyOnWriteArrayList<Attraction> copyOnWriteAttractions = new CopyOnWriteArrayList<>(attractions);
 
-        for (VisitedLocation visitedLocation : copyOnWriteUserLocations) {
-            for (Attraction attraction : copyOnWriteAttractions) {
-                if (user.getUserRewards().stream().noneMatch(userReward -> userReward.attraction.attractionName.equals(attraction.attractionName))) {
-                    if (nearAttraction(visitedLocation, attraction)) {
-                        user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user.getUserId())));
-                    }
-                }
-            }
-        }
+        var notRewardAttractions = attractions
+                .stream()
+                .filter(attraction -> user.getUserRewards()
+                        .stream()
+                        .noneMatch(userReward -> userReward.attraction.attractionName.equals(attraction.attractionName))
+                )
+                .toList();
+
+        userLocations.parallelStream()
+                .forEach(visitedLocation -> notRewardAttractions
+                        .parallelStream()
+                        .filter(attraction -> nearAttraction(visitedLocation, attraction))
+                        // .forEach(attraction -> submitReward(user, visitedLocation, attraction)));
+                        .forEach(attraction -> user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user.getUserId())))));
 
     }
 
+
+    private void submitReward(User user, VisitedLocation visitedLocation, Attraction attraction) {
+
+        CompletableFuture.supplyAsync(() -> getRewardPoints(attraction, user.getUserId()), executor)//TODO Frank
+                .thenAccept(p -> {
+                    var rewards = new UserReward(visitedLocation, attraction, p);
+                    user.addUserReward(rewards);
+                });
+
+    }
+
+    /**
+     * Mine old version
+     */
+//    public void calculateRewards(User user) {//TODO : Franck --> test nearAllAttractions
+//
+//        List<VisitedLocation> userLocations = new CopyOnWriteArrayList<>(user.getVisitedLocations());
+//        List<Attraction> attractions = gpsUtil.getAttractions();
+//
+//        for (VisitedLocation visitedLocation : userLocations) {
+//            for (Attraction attraction : attractions) {
+//                if (user.getUserRewards().stream().noneMatch(userReward -> userReward.attraction.attractionName.equals(attraction.attractionName))) {
+//                    if (nearAttraction(visitedLocation, attraction)) {
+//                        user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user.getUserId())));
+//                    }
+//                }
+//            }
+//        }
+//
+//    }
     public boolean isWithinAttractionProximity(Attraction attraction, Location location) {
         return !(getDistance(attraction, location) > attractionProximityRange);
     }

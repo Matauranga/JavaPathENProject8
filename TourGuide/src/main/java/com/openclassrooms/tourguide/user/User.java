@@ -70,7 +70,7 @@ public class User {
         visitedLocations.clear();
     }
 
-    public void addUserReward(UserReward userReward) {//TODO : Franck --> test nearAllAttractions
+    public void addUserReward(UserReward userReward) {
         if (userRewards.stream().noneMatch(r -> r.attraction.attractionName.equals(userReward.attraction.attractionName))) {
             userRewards.add(userReward);
         }

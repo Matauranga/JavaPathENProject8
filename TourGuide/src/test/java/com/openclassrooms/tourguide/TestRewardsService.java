@@ -45,7 +45,6 @@ public class TestRewardsService {
         assertTrue(rewardsService.isWithinAttractionProximity(attraction, attraction));
     }
 
-    // TODO : Needs fixed - des fois des doublons apparaissent en mode debug
     @Test
     public void nearAllAttractions() {
         GpsUtil gpsUtil = new GpsUtil();
