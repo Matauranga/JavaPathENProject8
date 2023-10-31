@@ -6,6 +6,7 @@ import com.openclassrooms.tourguide.tracker.Tracker;
 import com.openclassrooms.tourguide.user.User;
 import com.openclassrooms.tourguide.user.UserReward;
 import gpsUtil.GpsUtil;
+import gpsUtil.location.Attraction;
 import gpsUtil.location.Location;
 import gpsUtil.location.VisitedLocation;
 import org.slf4j.Logger;
@@ -108,22 +109,28 @@ public class TourGuideService {
     /**
      * mine
      */
-
     //TODO : Rename ? getFiveClosestAttractions
     public List<AttractionDTO> getNearbyAttractions(VisitedLocation visitedLocation) {
+        List<AttractionDTO> fiveClosestAttractions = new ArrayList<>();
 
-        return gpsUtil.getAttractions()
-                .parallelStream()
-                .sorted(Comparator.comparing(attraction -> rewardsService.getDistance(attraction, visitedLocation.location)))
-                .limit(5)
-                .map(attraction -> new AttractionDTO(attraction.attractionName,
-                        attraction,
-                        visitedLocation.location,
-                        rewardsService.getDistance(attraction, visitedLocation.location),
-                        rewardsService.getRewardPoints(attraction, visitedLocation.userId)))
-                .toList();
+        for (Attraction attraction : gpsUtil.getAttractions()) {
 
+            fiveClosestAttractions.add(new AttractionDTO(attraction.attractionName,
+                    attraction,
+                    visitedLocation.location,
+                    rewardsService.getDistance(attraction, visitedLocation.location),
+                    rewardsService.getRewardPoints(attraction, visitedLocation.userId)));
+        }
+
+        fiveClosestAttractions.sort(Comparator.comparing(AttractionDTO::getDistance));
+
+        for (AttractionDTO attractionDTO : fiveClosestAttractions) {
+            logger.info("Name : " + attractionDTO.getAttractionName() + " | Distance : " + attractionDTO.getDistance());
+        }
+
+        return fiveClosestAttractions.subList(0, 5);
     }
+
 
     private void addShutDownHook() {
         Runtime.getRuntime().addShutdownHook(new Thread() {
