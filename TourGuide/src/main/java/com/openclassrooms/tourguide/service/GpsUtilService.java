@@ -10,17 +10,13 @@ import java.util.UUID;
 
 @Service
 public class GpsUtilService {
-
-    public GpsUtilService() {
-    }
+    private GpsUtil gpsUtil = new GpsUtil();
 
     public List<Attraction> getAllAttractions() {
-        GpsUtil gpsUtil = new GpsUtil();
         return gpsUtil.getAttractions();
     }
 
     public VisitedLocation getUserLoc(UUID userId) {
-        GpsUtil gpsUtil = new GpsUtil();
         return gpsUtil.getUserLocation(userId);
     }
 
