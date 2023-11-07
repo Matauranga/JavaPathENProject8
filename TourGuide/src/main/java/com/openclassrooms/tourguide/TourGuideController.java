@@ -2,6 +2,7 @@ package com.openclassrooms.tourguide;
 
 import com.openclassrooms.tourguide.DTO.AttractionDTO;
 import com.openclassrooms.tourguide.service.TourGuideService;
+import com.openclassrooms.tourguide.service.UserService;
 import com.openclassrooms.tourguide.user.User;
 import com.openclassrooms.tourguide.user.UserReward;
 import gpsUtil.location.VisitedLocation;
@@ -18,6 +19,8 @@ public class TourGuideController {
 
     @Autowired
     TourGuideService tourGuideService;
+    @Autowired
+    UserService userService;
 
     @RequestMapping("/")
     public String index() {
@@ -55,7 +58,7 @@ public class TourGuideController {
     }
 
     private User getUser(String userName) {
-        return tourGuideService.getUser(userName);
+        return userService.getUser(userName);
     }
 
 

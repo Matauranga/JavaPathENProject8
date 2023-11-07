@@ -5,6 +5,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import com.openclassrooms.tourguide.service.UserService;
 import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,10 +18,12 @@ public class Tracker extends Thread {
     private static final long trackingPollingInterval = TimeUnit.MINUTES.toSeconds(5);
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final TourGuideService tourGuideService;
+    private final UserService userService;
     private boolean stop = false;
 
-    public Tracker(TourGuideService tourGuideService) {
+    public Tracker(TourGuideService tourGuideService, UserService userService) {
         this.tourGuideService = tourGuideService;
+        this.userService = userService;
 
         executorService.submit(this);
     }
@@ -42,7 +45,7 @@ public class Tracker extends Thread {
                 break;
             }
 
-            List<User> users = tourGuideService.getAllUsers();
+            List<User> users = userService.getAllUsers();
             logger.debug("Begin Tracker. Tracking " + users.size() + " users.");
             stopWatch.start();
             users.forEach(u -> tourGuideService.trackUserLocation(u));

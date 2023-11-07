@@ -4,6 +4,7 @@ import com.openclassrooms.tourguide.helper.InternalTestHelper;
 import com.openclassrooms.tourguide.service.GpsUtilService;
 import com.openclassrooms.tourguide.service.RewardsService;
 import com.openclassrooms.tourguide.service.TourGuideService;
+import com.openclassrooms.tourguide.service.UserService;
 import com.openclassrooms.tourguide.user.User;
 import com.openclassrooms.tourguide.user.UserReward;
 import gpsUtil.GpsUtil;
@@ -29,9 +30,9 @@ public class TestRewardsService {
         GpsUtilService gpsUtilService = new GpsUtilService();
 
         RewardsService rewardsService = new RewardsService(gpsUtilService, new RewardCentral());
-
+        UserService userService = new UserService();
         InternalTestHelper.setInternalUserNumber(0);
-        TourGuideService tourGuideService = new TourGuideService(gpsUtilService, rewardsService);
+        TourGuideService tourGuideService = new TourGuideService(gpsUtilService, rewardsService, userService);
 
         User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
         Attraction attraction = gpsUtilService.getAllAttractions().get(0);
@@ -57,12 +58,12 @@ public class TestRewardsService {
 
         RewardsService rewardsService = new RewardsService(gpsUtilService, new RewardCentral());
         rewardsService.setProximityBuffer(Integer.MAX_VALUE);
-
+        UserService userService = new UserService();
         InternalTestHelper.setInternalUserNumber(1);
-        TourGuideService tourGuideService = new TourGuideService(gpsUtilService, rewardsService);
+        TourGuideService tourGuideService = new TourGuideService(gpsUtilService, rewardsService, userService);
 
-        rewardsService.calculateRewards(tourGuideService.getAllUsers().get(0));
-        List<UserReward> userRewards = tourGuideService.getUserRewards(tourGuideService.getAllUsers().get(0));
+        rewardsService.calculateRewards(userService.getAllUsers().get(0));
+        List<UserReward> userRewards = tourGuideService.getUserRewards(userService.getAllUsers().get(0));
         tourGuideService.tracker.stopTracking();
 
         assertEquals(gpsUtilService.getAllAttractions().size(), userRewards.size());
