@@ -2,7 +2,6 @@ package com.openclassrooms.tourguide.service;
 
 import com.openclassrooms.tourguide.user.User;
 import com.openclassrooms.tourguide.user.UserReward;
-import gpsUtil.GpsUtil;
 import gpsUtil.location.Attraction;
 import gpsUtil.location.Location;
 import gpsUtil.location.VisitedLocation;
@@ -24,12 +23,15 @@ public class RewardsService {
     private final int defaultProximityBuffer = 10;
     private int proximityBuffer = defaultProximityBuffer;
     private int attractionProximityRange = 200;
-    private final GpsUtil gpsUtil;
-    private final RewardCentral rewardsCentral;
-    private final ExecutorService executor = Executors.newFixedThreadPool(2); //TODO Frank
+    private final GpsUtilService gpsUtilService;
 
-    public RewardsService(GpsUtil gpsUtil, RewardCentral rewardCentral) {
-        this.gpsUtil = gpsUtil;
+    // private final GpsUtil gpsUtil;
+    private final RewardCentral rewardsCentral;
+    private final ExecutorService executor = Executors.newFixedThreadPool(1000);
+
+    public RewardsService(GpsUtilService gpsUtilService, RewardCentral rewardCentral) {
+        //  this.gpsUtil = gpsUtil;
+        this.gpsUtilService = gpsUtilService;
         this.rewardsCentral = rewardCentral;
     }
 
@@ -65,7 +67,7 @@ public class RewardsService {
     public void calculateRewards(User user) {
 
         List<VisitedLocation> userLocations = new CopyOnWriteArrayList<>(user.getVisitedLocations());
-        List<Attraction> attractions = gpsUtil.getAttractions();
+        List<Attraction> attractions = gpsUtilService.getAllAttractions();
 
         var notRewardAttractions = attractions
                 .stream()
@@ -75,17 +77,18 @@ public class RewardsService {
                 )
                 .toList();
 
-        userLocations.parallelStream()
+        userLocations
+                .parallelStream()
                 .forEach(visitedLocation -> notRewardAttractions
                         .parallelStream()
                         .filter(attraction -> nearAttraction(visitedLocation, attraction))
-                        // .forEach(attraction -> submitReward(user, visitedLocation, attraction)));
+                        //.forEach(attraction -> submitReward(user, visitedLocation, attraction)));
                         .forEach(attraction -> user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user.getUserId())))));
 
     }
 
 
-    private void submitReward(User user, VisitedLocation visitedLocation, Attraction attraction) {
+    private void submitReward(User user, VisitedLocation visitedLocation, Attraction attraction) {//TODO a corriger
 
         CompletableFuture.supplyAsync(() -> getRewardPoints(attraction, user.getUserId()), executor)//TODO Frank
                 .thenAccept(p -> {

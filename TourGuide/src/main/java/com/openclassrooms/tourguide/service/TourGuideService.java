@@ -19,20 +19,24 @@ import tripPricer.TripPricer;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Service
 public class TourGuideService {
     private Logger logger = LoggerFactory.getLogger(TourGuideService.class);
-    private final GpsUtil gpsUtil;
+    private final GpsUtilService gpsUtilService;
+
+    //private final GpsUtil gpsUtil;
     private final RewardsService rewardsService;
     private final TripPricer tripPricer = new TripPricer();
     public final Tracker tracker;
     boolean testMode = true;
 
-    public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService) {
-        this.gpsUtil = gpsUtil;
+    public TourGuideService(GpsUtilService gpsUtilService, RewardsService rewardsService) {
+        //this.gpsUtil = gpsUtil;
+        this.gpsUtilService = gpsUtilService;
         this.rewardsService = rewardsService;
 
         Locale.setDefault(Locale.US);
@@ -47,7 +51,7 @@ public class TourGuideService {
         addShutDownHook();
     }
 
-    public List<UserReward> getUserRewards(User user) {
+    public List<UserReward> getUserRewards(User user) {//TODO inutile
         return user.getUserRewards();
     }
 
@@ -88,12 +92,11 @@ public class TourGuideService {
     }
 
     public VisitedLocation trackUserLocation(User user) {
-        VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
+        VisitedLocation visitedLocation = gpsUtilService.getUserLoc(user.getUserId());
         user.addToVisitedLocations(visitedLocation);
         rewardsService.calculateRewards(user);
         return visitedLocation;
     }
-
 
     /**
      * Original
@@ -116,7 +119,7 @@ public class TourGuideService {
     //TODO : Rename ? getFiveClosestAttractions
     public List<AttractionDTO> getNearbyAttractions(VisitedLocation visitedLocation) {
 
-        return gpsUtil.getAttractions()
+        return gpsUtilService.getAllAttractions()
                 .parallelStream()
                 .sorted(Comparator.comparing(attraction -> rewardsService.getDistance(attraction, visitedLocation.location)))
                 .limit(5)
