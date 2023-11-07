@@ -24,13 +24,10 @@ public class RewardsService {
     private int proximityBuffer = defaultProximityBuffer;
     private int attractionProximityRange = 200;
     private final GpsUtilService gpsUtilService;
-
-    // private final GpsUtil gpsUtil;
     private final RewardCentral rewardsCentral;
     private final ExecutorService executor = Executors.newFixedThreadPool(1000);
 
     public RewardsService(GpsUtilService gpsUtilService, RewardCentral rewardCentral) {
-        //  this.gpsUtil = gpsUtil;
         this.gpsUtilService = gpsUtilService;
         this.rewardsCentral = rewardCentral;
     }

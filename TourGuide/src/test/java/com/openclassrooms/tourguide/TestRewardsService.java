@@ -18,6 +18,8 @@ import rewardCentral.RewardCentral;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -53,7 +55,7 @@ public class TestRewardsService {
     }
 
     @Test
-    public void nearAllAttractions() {
+    public void nearAllAttractions() throws ExecutionException, InterruptedException {
         GpsUtilService gpsUtilService = new GpsUtilService();
 
         RewardsService rewardsService = new RewardsService(gpsUtilService, new RewardCentral());
