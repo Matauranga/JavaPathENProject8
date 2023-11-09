@@ -34,14 +34,26 @@ public class RewardsService {
         this.rewardsCentral = rewardCentral;
     }
 
+    /**
+     * Method to set proximity buffer
+     *
+     */
     public void setProximityBuffer(int proximityBuffer) {
         this.proximityBuffer = proximityBuffer;
     }
 
+    /**
+     * Method to set default proximity buffer
+     *
+     */
     public void setDefaultProximityBuffer() {
         proximityBuffer = defaultProximityBuffer;
     }
 
+    /**
+     * This method retrieves all attractions not rewarded but visited by a user and calculates the new reward points amount.
+     *
+     */
     public void calculateRewards(User user) {
         List<VisitedLocation> userLocations = new CopyOnWriteArrayList<>(user.getVisitedLocations());
         List<Attraction> attractions = gpsUtilService.getAllAttractions();
@@ -61,7 +73,6 @@ public class RewardsService {
                 .forEach(visitedLocation -> notRewardAttractions
                         .parallelStream()
                         .filter(attraction -> nearAttraction(visitedLocation, attraction))
-                        //.forEach(attraction -> submitReward(user, visitedLocation, attraction)));
                         .forEach(attraction -> futures.add(CompletableFuture.runAsync(() -> submitReward(user, visitedLocation, attraction), executor))));
 
         futures.forEach(future -> {
@@ -73,22 +84,42 @@ public class RewardsService {
         });
     }
 
+    /**
+     * This method submits rewards for visiting an attraction
+     *
+     */
     private void submitReward(User user, VisitedLocation visitedLocation, Attraction attraction) {
         user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user.getUserId())));
     }
 
-    public boolean isWithinAttractionProximity(Attraction attraction, Location location) {
+    /**
+     * This method allows us to know if a user is close to an attraction
+     *
+     */
+    public boolean isWithinAttractionProximity(Attraction attraction, Location location) { //Todo difference entre les deux
         return !(getDistance(attraction, location) > attractionProximityRange);
     }
 
-    private boolean nearAttraction(VisitedLocation visitedLocation, Attraction attraction) {
+    /**
+     *
+     *
+     */
+    private boolean nearAttraction(VisitedLocation visitedLocation, Attraction attraction) {//Todo ici
         return !(getDistance(attraction, visitedLocation.location) > proximityBuffer);
     }
 
+    /**
+     * This method gives us the number of reward points for visiting an attraction
+     *
+     */
     public int getRewardPoints(Attraction attraction, UUID userId) {
         return rewardsCentral.getAttractionRewardPoints(attraction.attractionId, userId);
     }
 
+    /**
+     * This method returns the distance (in miles) between a user and an attraction
+     *
+     */
     public double getDistance(Location loc1, Location loc2) {
         double lat1 = Math.toRadians(loc1.latitude);
         double lon1 = Math.toRadians(loc1.longitude);

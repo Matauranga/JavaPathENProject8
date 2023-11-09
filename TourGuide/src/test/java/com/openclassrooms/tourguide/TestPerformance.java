@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import rewardCentral.RewardCentral;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -52,21 +51,14 @@ public class TestPerformance {
         UserService userService = new UserService();
 
         RewardsService rewardsService = new RewardsService(gpsUtilService, new RewardCentral());
-        // Users should be incremented up to 100,000, and test finishes within 15
-        // minutes
-        InternalTestHelper.setInternalUserNumber(1000);
+        // Users should be incremented up to 100,000, and test finishes within 15 minutes
+        // Actual score for 100,000 : 1 min. 41 sec.
+        InternalTestHelper.setInternalUserNumber(100000);
         TourGuideService tourGuideService = new TourGuideService(gpsUtilService, rewardsService, userService);
-
-        List<User> allUsers = new ArrayList<>();
-        allUsers = userService.getAllUsers();
 
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
         tourGuideService.trackAllUsersLocation();
-        /*
-        for (User user : allUsers) {
-            tourGuideService.trackUserLocation(user);
-        }*/
         stopWatch.stop();
         tourGuideService.tracker.stopTracking();
 
@@ -82,8 +74,8 @@ public class TestPerformance {
         UserService userService = new UserService();
         RewardsService rewardsService = new RewardsService(gpsUtilService, new RewardCentral());
 
-        // Users should be incremented up to 100,000, and test finishes within 20
-        // minutes
+        // Users should be incremented up to 100,000, and test finishes within 20 minutes
+        // Actual score for 100,000 : ? min. ? sec.
         InternalTestHelper.setInternalUserNumber(100);
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();

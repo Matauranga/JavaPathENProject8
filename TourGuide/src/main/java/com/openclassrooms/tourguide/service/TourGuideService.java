@@ -18,6 +18,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Class to link user, rewards and location.
+ *
+ */
 @Service
 @Slf4j
 public class TourGuideService {
@@ -47,16 +51,31 @@ public class TourGuideService {
         addShutDownHook();
     }
 
+    /**
+     * Method to get user rewards
+     *
+     * @return a list of user rewards
+     */
     public List<UserReward> getUserRewards(User user) {//TODO inutile
         return user.getUserRewards();
     }
 
+    /**
+     *Method to get user location
+     *
+     * @return the user location
+     */
     public VisitedLocation getUserLocation(User user) {
         return (!user.getVisitedLocations().isEmpty())
                 ? user.getLastVisitedLocation()
                 : trackUserLocation(user);
     }
 
+    /**
+     *Method to get trip deal
+     *
+     * @return a list of trip deal
+     */
     public List<Provider> getTripDeals(User user) {
 
         int cumulativeRewardPoints = user.getUserRewards()
@@ -73,7 +92,11 @@ public class TourGuideService {
         return providers;
     }
 
-    public void trackAllUsersLocation() {
+    /**
+     * Method to get all user location
+     *
+     */
+    public void trackAllUsersLocation() {//TODO modifier pour s'adapter au nb de user ? return liste de localisation ?
         var users = userService.getAllUsers();
 
         List<CompletableFuture> futures = new ArrayList<>();
@@ -90,6 +113,11 @@ public class TourGuideService {
         });
     }
 
+    /**
+     * Method to get user location
+     *
+     * @return the localisation of the user
+     */
     public VisitedLocation trackUserLocation(User user) {
         VisitedLocation visitedLocation = gpsUtilService.getUserLoc(user.getUserId());
         CompletableFuture.runAsync(() -> {
@@ -99,6 +127,12 @@ public class TourGuideService {
         return visitedLocation;
     }
 
+    /**
+     * Get the closest five tourist attractions to the user - no matter how far away they are
+     *
+     * @param visitedLocation user's last known location
+     * @return A list of objects with the name of the attractions, the attractions and the user's location, the distance between the user and the attractions and the reward points earned for visiting these attractions
+     */
     public List<AttractionDTO> getNearbyAttractions(VisitedLocation visitedLocation) {
 
         return gpsUtilService.getAllAttractions()
@@ -113,6 +147,10 @@ public class TourGuideService {
                 .toList();
     }
 
+    /**
+     * Assures to shut down the Tracker thread
+     *
+     */
     private void addShutDownHook() {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
