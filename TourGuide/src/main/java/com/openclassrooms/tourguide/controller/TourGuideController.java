@@ -1,4 +1,4 @@
-package com.openclassrooms.tourguide;
+package com.openclassrooms.tourguide.controller;
 
 import com.openclassrooms.tourguide.DTO.AttractionDTO;
 import com.openclassrooms.tourguide.service.TourGuideService;

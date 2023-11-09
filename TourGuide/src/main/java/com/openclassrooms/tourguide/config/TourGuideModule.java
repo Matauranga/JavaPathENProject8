@@ -1,4 +1,4 @@
-package com.openclassrooms.tourguide;
+package com.openclassrooms.tourguide.config;
 
 import com.openclassrooms.tourguide.service.GpsUtilService;
 import com.openclassrooms.tourguide.service.RewardsService;
