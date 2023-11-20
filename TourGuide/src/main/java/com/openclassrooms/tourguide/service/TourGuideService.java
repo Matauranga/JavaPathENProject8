@@ -10,13 +10,14 @@ import org.springframework.stereotype.Service;
 import tripPricer.Provider;
 import tripPricer.TripPricer;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * Class to link user, rewards and location.
@@ -32,7 +33,7 @@ public class TourGuideService {
     private final TripPricer tripPricer = new TripPricer();
     public final Tracker tracker;
     boolean testMode = true;
-    private final ExecutorService executor = Executors.newFixedThreadPool(1024);
+    private final ExecutorService executor = Executors.newFixedThreadPool(2048);
 
     public TourGuideService(GpsUtilService gpsUtilService, RewardsService rewardsService, UserService userService) {
         this.gpsUtilService = gpsUtilService;
@@ -93,24 +94,21 @@ public class TourGuideService {
     }
 
     /**
-     * Method to get all user location
+     * Method to get all user location/ moi
      *
      */
-    public void trackAllUsersLocation() {//TODO modifier pour s'adapter au nb de user ? return liste de localisation ?
-        var users = userService.getAllUsers();
+    public List<VisitedLocation> trackAllUsersLocation(List<User> userList) {
 
-        List<CompletableFuture> futures = new ArrayList<>();
+        List<CompletableFuture<VisitedLocation>> usersLocations =
+                userList
+                        .parallelStream()
+                        .map(user -> CompletableFuture.supplyAsync(() -> trackUserLocation(user), executor))
+                        .toList();
 
-        users.parallelStream()
-                .forEach(u -> futures.add(CompletableFuture.supplyAsync(() -> trackUserLocation(u), executor)));
-
-        futures.forEach(future -> {
-            try {
-                future.get();
-            } catch (Exception e) {
-                log.error("User tracking error : " + e.getMessage());
-            }
-        });
+        return usersLocations
+                .parallelStream()
+                .map(CompletableFuture::join)
+                .collect(toList());
     }
 
     /**
@@ -120,10 +118,8 @@ public class TourGuideService {
      */
     public VisitedLocation trackUserLocation(User user) {
         VisitedLocation visitedLocation = gpsUtilService.getUserLoc(user.getUserId());
-        CompletableFuture.runAsync(() -> {
-            user.addToVisitedLocations(visitedLocation);
-            rewardsService.calculateRewards(user);
-        }, executor);
+        user.addToVisitedLocations(visitedLocation);
+        rewardsService.calculateRewards(user);
         return visitedLocation;
     }
 

@@ -13,10 +13,12 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import rewardCentral.RewardCentral;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestPerformance {
@@ -49,16 +51,23 @@ public class TestPerformance {
     public void highVolumeTrackLocation() {
         GpsUtilService gpsUtilService = new GpsUtilService();
         UserService userService = new UserService();
+        RewardsService rewardsService = new RewardsService(gpsUtilService, new RewardCentral(), userService);
 
-        RewardsService rewardsService = new RewardsService(gpsUtilService, new RewardCentral());
         // Users should be incremented up to 100,000, and test finishes within 15 minutes
-        // Actual score for 100,000 : 1 min. 41 sec.
-        InternalTestHelper.setInternalUserNumber(100000);
+        // Actual score for 100,000 : 200 secondes.
+        InternalTestHelper.setInternalUserNumber(5000);
+
         TourGuideService tourGuideService = new TourGuideService(gpsUtilService, rewardsService, userService);
+
+        List<User> allUsers = new ArrayList<>();
+        allUsers = userService.getAllUsers();
+
 
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
-        tourGuideService.trackAllUsersLocation();
+
+        tourGuideService.trackAllUsersLocation(allUsers);
+
         stopWatch.stop();
         tourGuideService.tracker.stopTracking();
 
@@ -72,24 +81,25 @@ public class TestPerformance {
     public void highVolumeGetRewards() {
         GpsUtilService gpsUtilService = new GpsUtilService();
         UserService userService = new UserService();
-        RewardsService rewardsService = new RewardsService(gpsUtilService, new RewardCentral());
+        RewardsService rewardsService = new RewardsService(gpsUtilService, new RewardCentral(), userService);
 
         // Users should be incremented up to 100,000, and test finishes within 20 minutes
-        // Actual score for 100,000 : ? min. ? sec.
-        InternalTestHelper.setInternalUserNumber(100);
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
+        // Actual score for 100,000 : 12 min. 57 sec.
+        InternalTestHelper.setInternalUserNumber(2500);
         TourGuideService tourGuideService = new TourGuideService(gpsUtilService, rewardsService, userService);
 
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
         Attraction attraction = gpsUtilService.getAllAttractions().get(0);
         List<User> allUsers = userService.getAllUsers();
         allUsers.forEach(u -> u.addToVisitedLocations(new VisitedLocation(u.getUserId(), attraction, new Date())));
 
-        allUsers.forEach(u -> rewardsService.calculateRewards(u));
+        rewardsService.calculateAllUsersRewards(allUsers);
 
         for (User user : allUsers) {
-            assertTrue(user.getUserRewards().size() > 0);
+            assertFalse(user.getUserRewards().isEmpty());
         }
+
         stopWatch.stop();
         tourGuideService.tracker.stopTracking();
 

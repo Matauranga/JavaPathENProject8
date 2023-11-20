@@ -27,9 +27,11 @@ public class RewardsService {
     private int attractionProximityRange = 200;
     private final GpsUtilService gpsUtilService;
     private final RewardCentral rewardsCentral;
-    private final ExecutorService executor = Executors.newFixedThreadPool(1000);
+    private final ExecutorService executor = Executors.newFixedThreadPool(2048);
+    private UserService userService;
 
-    public RewardsService(GpsUtilService gpsUtilService, RewardCentral rewardCentral) {
+    public RewardsService(GpsUtilService gpsUtilService, RewardCentral rewardCentral, UserService userService) {
+        this.userService = userService;
         this.gpsUtilService = gpsUtilService;
         this.rewardsCentral = rewardCentral;
     }
@@ -51,7 +53,20 @@ public class RewardsService {
     }
 
     /**
-     * This method retrieves all attractions not rewarded but visited by a user and calculates the new reward points amount.
+     *
+     */
+    public void calculateAllUsersRewards(List<User> users) {
+        List<CompletableFuture<Void>> futures = users
+                .parallelStream()
+                .map(user -> CompletableFuture.runAsync(() -> calculateRewards(user), executor))
+                .toList();
+
+        futures.forEach(CompletableFuture::join);
+    }
+
+
+    /**
+     * This method retrieves all attractions not rewarded but visited by a user and calculates the new rewards
      *
      */
     public void calculateRewards(User user) {
@@ -60,20 +75,13 @@ public class RewardsService {
 
         List<CompletableFuture> futures = new ArrayList<>();
 
-        var notRewardAttractions = attractions
-                .stream()
-                .filter(attraction -> user.getUserRewards()
-                        .stream()
-                        .noneMatch(userReward -> userReward.attraction.attractionName.equals(attraction.attractionName))
-                )
-                .toList();
-
         userLocations
                 .parallelStream()
-                .forEach(visitedLocation -> notRewardAttractions
+                .forEach(visitedLocation -> getNotRewardAttractions(user, attractions)
                         .parallelStream()
                         .filter(attraction -> nearAttraction(visitedLocation, attraction))
-                        .forEach(attraction -> futures.add(CompletableFuture.runAsync(() -> submitReward(user, visitedLocation, attraction), executor))));
+                        .forEach(attraction -> submitReward(user, visitedLocation, attraction)));
+//                        .forEach(attraction -> futures.add(CompletableFuture.runAsync(() -> submitReward(user, visitedLocation, attraction), executor))));
 
         futures.forEach(future -> {
             try {
@@ -82,6 +90,21 @@ public class RewardsService {
                 log.error("Calculate Rewards error : " + e.getMessage());
             }
         });
+    }
+
+
+    /**
+     * Method to retrieve all unrewarded attractions for a user
+     *
+     */
+    private static List<Attraction> getNotRewardAttractions(User user, List<Attraction> attractions) {
+        return attractions
+                .parallelStream()
+                .filter(attraction -> user.getUserRewards()
+                        .parallelStream()
+                        .noneMatch(userReward -> userReward.attraction.attractionName.equals(attraction.attractionName))
+                )
+                .toList();
     }
 
     /**
@@ -93,18 +116,18 @@ public class RewardsService {
     }
 
     /**
-     * This method allows us to know if a user is close to an attraction
+     * This method allows us to know is location is in the attraction proximity range
      *
      */
-    public boolean isWithinAttractionProximity(Attraction attraction, Location location) { //Todo difference entre les deux
+    public boolean isWithinAttractionProximity(Attraction attraction, Location location) {
         return !(getDistance(attraction, location) > attractionProximityRange);
     }
 
     /**
-     *
+     * This method allows us to know if a user is close to an attraction
      *
      */
-    private boolean nearAttraction(VisitedLocation visitedLocation, Attraction attraction) {//Todo ici
+    private boolean nearAttraction(VisitedLocation visitedLocation, Attraction attraction) {
         return !(getDistance(attraction, visitedLocation.location) > proximityBuffer);
     }
 

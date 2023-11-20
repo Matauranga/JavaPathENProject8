@@ -66,7 +66,7 @@ public class UserService {
 
             internalUserMap.put(userName, user);
         });
-        log.debug("Created " + InternalTestHelper.getInternalUserNumber() + " internal test users.");
+        log.info("Created " + InternalTestHelper.getInternalUserNumber() + " internal test users.");
     }
 
     /**
