@@ -1,16 +1,19 @@
 package com.openclassrooms.tourguide.controller;
 
 import com.openclassrooms.tourguide.DTO.AttractionDTO;
+import com.openclassrooms.tourguide.service.GpsUtilService;
 import com.openclassrooms.tourguide.service.TourGuideService;
 import com.openclassrooms.tourguide.service.UserService;
 import com.openclassrooms.tourguide.user.User;
 import com.openclassrooms.tourguide.user.UserReward;
+import gpsUtil.location.Attraction;
 import gpsUtil.location.VisitedLocation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import tripPricer.Provider;
 
+import java.util.Date;
 import java.util.List;
 
 @Slf4j
@@ -32,12 +35,6 @@ public class TourGuideController {
         return tourGuideService.getUserLocation(getUser(userName));
     }
 
-    @PostMapping("/addUser")
-    public void createUser(@RequestBody User user) {
-        log.debug("Ask to create person");
-        userService.addUser(user);
-    }
-
     @RequestMapping("/getNearbyAttractions")
     public List<AttractionDTO> getNearbyAttractions(@RequestParam String userName) {
         VisitedLocation visitedLocation = tourGuideService.getUserLocation(getUser(userName));
@@ -56,6 +53,32 @@ public class TourGuideController {
 
     private User getUser(String userName) {
         return userService.getUser(userName);
+    }
+
+    /*************************************************************
+     *
+     *                       EndPoint test
+     *
+     ************************************************************/
+    @Autowired
+    GpsUtilService gpsUtilService;
+
+    /**
+     *
+     * This creates a user and gives them an attraction reward
+     *
+     * @param user
+     */
+    @PostMapping("/addUser")
+    public void createUser(@RequestBody User user) {
+        log.debug("Ask to create person");
+        userService.addUser(user);
+
+        Attraction attraction = gpsUtilService.getAllAttractions().get(0);
+        user.addToVisitedLocations(new VisitedLocation(user.getUserId(), attraction, new Date()));
+        tourGuideService.trackUserLocation(user);
+        tourGuideService.tracker.stopTracking();
+
     }
 
 }
