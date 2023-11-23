@@ -52,14 +52,16 @@ public class TourGuideService {
         addShutDownHook();
     }
 
+
     /**
      * Method to get user rewards
      *
      * @return a list of user rewards
      */
-    public List<UserReward> getUserRewards(User user) {//TODO inutile
+    public List<UserReward> getUserRewards(User user) {
         return user.getUserRewards();
     }
+
 
     /**
      *Method to get user location
@@ -71,6 +73,7 @@ public class TourGuideService {
                 ? user.getLastVisitedLocation()
                 : trackUserLocation(user);
     }
+
 
     /**
      *Method to get trip deal
@@ -93,6 +96,7 @@ public class TourGuideService {
         return providers;
     }
 
+
     /**
      * Method to get all user location/ moi
      *
@@ -111,6 +115,7 @@ public class TourGuideService {
                 .collect(toList());
     }
 
+
     /**
      * Method to get user location
      *
@@ -122,6 +127,7 @@ public class TourGuideService {
         rewardsService.calculateRewards(user);
         return visitedLocation;
     }
+
 
     /**
      * Get the closest five tourist attractions to the user - no matter how far away they are
@@ -143,16 +149,13 @@ public class TourGuideService {
                 .toList();
     }
 
+
     /**
      * Assures to shut down the Tracker thread
      *
      */
     private void addShutDownHook() {
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-                tracker.stopTracking();
-            }
-        });
+        Runtime.getRuntime().addShutdownHook(new Thread(tracker::stopTracking));
     }
 
 }

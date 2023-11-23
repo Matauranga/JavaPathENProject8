@@ -18,7 +18,7 @@ import java.io.IOException;
 public class LoggingFilter extends OncePerRequestFilter {
 
     /**
-     * Method using a custom filter to capture the payload of the server request and response //TODO franck "payload"
+     * Method using a custom filter to capture the payload of the server request and response
      *
      * @param request     information in the request send
      * @param response    information returned by the server

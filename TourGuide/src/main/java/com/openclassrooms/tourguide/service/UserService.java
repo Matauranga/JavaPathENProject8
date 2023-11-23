@@ -40,6 +40,7 @@ public class UserService {
      */
     public void addUser(User user) {
         if (!internalUserMap.containsKey(user.getUserName())) {
+            log.debug("create user");
             internalUserMap.put(user.getUserName(), user);
         }
     }

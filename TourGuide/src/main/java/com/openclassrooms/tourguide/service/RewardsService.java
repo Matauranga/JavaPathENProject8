@@ -9,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import rewardCentral.RewardCentral;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -73,23 +72,12 @@ public class RewardsService {
         List<VisitedLocation> userLocations = new CopyOnWriteArrayList<>(user.getVisitedLocations());
         List<Attraction> attractions = gpsUtilService.getAllAttractions();
 
-        List<CompletableFuture> futures = new ArrayList<>();
-
         userLocations
                 .parallelStream()
                 .forEach(visitedLocation -> getNotRewardAttractions(user, attractions)
                         .parallelStream()
                         .filter(attraction -> nearAttraction(visitedLocation, attraction))
                         .forEach(attraction -> submitReward(user, visitedLocation, attraction)));
-//                        .forEach(attraction -> futures.add(CompletableFuture.runAsync(() -> submitReward(user, visitedLocation, attraction), executor))));
-
-        futures.forEach(future -> {
-            try {
-                future.get();
-            } catch (Exception e) {
-                log.error("Calculate Rewards error : " + e.getMessage());
-            }
-        });
     }
 
 
@@ -107,6 +95,7 @@ public class RewardsService {
                 .toList();
     }
 
+
     /**
      * This method submits rewards for visiting an attraction
      *
@@ -114,6 +103,7 @@ public class RewardsService {
     private void submitReward(User user, VisitedLocation visitedLocation, Attraction attraction) {
         user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user.getUserId())));
     }
+
 
     /**
      * This method allows us to know is location is in the attraction proximity range
@@ -123,6 +113,7 @@ public class RewardsService {
         return !(getDistance(attraction, location) > attractionProximityRange);
     }
 
+
     /**
      * This method allows us to know if a user is close to an attraction
      *
@@ -131,6 +122,7 @@ public class RewardsService {
         return !(getDistance(attraction, visitedLocation.location) > proximityBuffer);
     }
 
+
     /**
      * This method gives us the number of reward points for visiting an attraction
      *
@@ -138,6 +130,7 @@ public class RewardsService {
     public int getRewardPoints(Attraction attraction, UUID userId) {
         return rewardsCentral.getAttractionRewardPoints(attraction.attractionId, userId);
     }
+
 
     /**
      * This method returns the distance (in miles) between a user and an attraction
