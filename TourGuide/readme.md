@@ -13,12 +13,6 @@ The rewards are applied based on the attractions visited.
 > - rewardCentral 1.0.0
 > - tripPricer 1.0.0
 
-#### How to have gpsUtil, rewardCentral and tripPricer dependencies available ?
-> Run : 
-> - mvn install:install-file -Dfile=/<code style="color : darkorange">**_YOUR_PATH_**</code>/libs/gpsUtil.jar -DgroupId=gpsUtil -DartifactId=gpsUtil -Dversion=1.0.0 -Dpackaging=jar
-> - mvn install:install-file -Dfile=/<code style="color : darkorange">**_YOUR_PATH_**</code>/libs/RewardCentral.jar -DgroupId=rewardCentral -DartifactId=rewardCentral -Dversion=1.0.0 -Dpackaging=jar
-> - mvn install:install-file -Dfile=/<code style="color : darkorange">**_YOUR_PATH_**</code>/libs/TripPricer.jar -DgroupId=tripPricer -DartifactId=tripPricer -Dversion=1.0.0 -Dpackaging=jar
-
 # Endpoints
 ## GET
 To test the different endpoints, don't forget to create a user. Use the POST endpoint with a tool like Postman.
