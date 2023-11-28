@@ -46,3 +46,4 @@ http://localhost:8080/addUser
     }
 
 # Technical diagram
+![TourGuideArchitecturalOverview.png](documents/TourGuideArchitecturalOverview.PNG)
