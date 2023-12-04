@@ -4,6 +4,7 @@ import com.openclassrooms.tourguide.DTO.AttractionDTO;
 import com.openclassrooms.tourguide.tracker.Tracker;
 import com.openclassrooms.tourguide.user.User;
 import com.openclassrooms.tourguide.user.UserReward;
+import gpsUtil.location.Location;
 import gpsUtil.location.VisitedLocation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -98,7 +99,7 @@ public class TourGuideService {
 
 
     /**
-     * Method to get all user location/ moi
+     * Method to get all user location
      *
      */
     public List<VisitedLocation> trackAllUsersLocation(List<User> userList) {
@@ -142,7 +143,7 @@ public class TourGuideService {
                 .sorted(Comparator.comparing(attraction -> rewardsService.getDistance(attraction, visitedLocation.location)))
                 .limit(5)
                 .map(attraction -> new AttractionDTO(attraction.attractionName,
-                        attraction,
+                        new Location(attraction.latitude, attraction.longitude),
                         visitedLocation.location,
                         rewardsService.getDistance(attraction, visitedLocation.location),
                         rewardsService.getRewardPoints(attraction, visitedLocation.userId)))
